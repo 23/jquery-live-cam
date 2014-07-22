@@ -18,6 +18,8 @@ The Flash object will be embedded into the following Div:
 <button id="start-btn" onclick="webcam.startStreaming('rtmp url', 'stream name')">&#9658;</button>
 <button id="stop-btn" onclick="webcam.stopStreaming();">&#9632;</button>```
 
+And some code
+
 ```javascript
 
 jQuery("#webcam").webcam({
