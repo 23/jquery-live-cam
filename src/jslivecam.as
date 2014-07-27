@@ -60,7 +60,7 @@ package {
       camera.addEventListener(StatusEvent.STATUS, function(event:StatusEvent):void {
         switch(event.code) {
         case "Camera.Muted": 
-	  ExternalInterface.call('webcam.debug', "notify", "Camera stopped");
+          ExternalInterface.call('webcam.debug', "error", "The camera was disabled.");
           break; 
         case "Camera.Unmuted": 
 	  ExternalInterface.call('webcam.debug', "notify", "Camera started");
