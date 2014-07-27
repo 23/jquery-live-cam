@@ -1,47 +1,6 @@
-jQuery Webcam Plugin
-====================
-
-Description
------------
 A small wrapper library to be able to stream to an RTMP server via JavaScript.
 
-
-Example
-------
-
-Please note: The camera doesn't work if you have any dom-errors on your page!
-
-The Flash object will be embedded into the following Div:
-
-```html
-<div id="webcam"></div>
-<button id="start-btn" onclick="webcam.startStreaming('rtmp url', 'stream name')">&#9658;</button>
-<button id="stop-btn" onclick="webcam.stopStreaming();">&#9632;</button>```
-
-And some code
-
-```javascript
-
-jQuery("#webcam").webcam({
-	width: 320,
-	height: 240,
-	swffile: "/jslivecam.swf", 
-
-    debug: function (type, string) {
-      console.debug(type, string);
-    },
-    onLoad: function () {
-      console.debug('onLoad');
-    },
-    onStreamingStart: function () {
-      console.debug('onStreamingStart');
-    },
-    onStreamingStop: function () {
-      console.debug('onStreamingStop');
-    }
-});
-
-```
+We're using this and it's good. Beware though that Flash doesn't support AAC encoding of audio, which in turn means that both HLS and HDS streaming is out of the question if you cannot do server-side transcoding.te
 
 
 Acknowledgement

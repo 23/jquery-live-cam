@@ -17,11 +17,17 @@
     "extern": null, // external select token to support jQuery dialogs
     "append": true, // append object instead of overwriting
 
-    "width": 320,
-    "height": 240,
+    "bgcolor":"#000000",
+    "canvasWidth": 640,
+    "canvasHeight": 360,
 
     "swffile": "jslivecam.swf",
     "quality": 100,
+    "frameRate": 25,
+    "keyFrameInterval": 50,
+    "bitrate": 1000000,
+    "width": 1280,
+    "height": 720,
 
     "debug":	function () {},
     "onStreamingStart":	function() {},
@@ -41,7 +47,7 @@
       }
     }
 
-    var source = '<object id="XwebcamXobjectX" type="application/x-shockwave-flash" data="'+webcam["swffile"]+'" width="'+webcam["width"]+'" height="'+webcam["height"]+'"><param name="movie" value="'+webcam["swffile"]+'" /><param name="FlashVars" value="mode='+webcam["mode"]+'&amp;quality='+webcam["quality"]+'" /><param name="allowScriptAccess" value="always" /></object>';
+    var source = '<object id="XwebcamXobjectX" type="application/x-shockwave-flash" bgcolor="'+webcam["bgcolor"]+'" data="'+webcam["swffile"]+'" width="'+webcam["canvasWidth"]+'" height="'+webcam["canvasHeight"]+'"><param name="movie" value="'+webcam["swffile"]+'" /><param name="allowScriptAccess" value="always" /></object>';
 
     if (null !== webcam["extern"]) {
       $(webcam["extern"])[webcam["append"] ? "append" : "html"](source);
@@ -66,6 +72,8 @@
 	    return cam["stopStreaming"]();
 	  } catch(e) {}
 	}
+        
+        cam["bootstrap"](webcam.width, webcam.height, webcam.frameRate, webcam.keyFrameInterval, webcam.quality, webcam.bitrate);
 	webcam["onLoad"]();
       } else if (0 == run) {
 	webcam["debug"]("error", "Flash movie not yet registered!");

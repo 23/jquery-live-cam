@@ -27,14 +27,26 @@ package {
     private var server:String = null;
     private var stream:String = null;
     private var h264Settings:H264VideoStreamSettings = null;
+    private var bootstrapped:Boolean = false;
 
     public function jslivecam() {
+      stage.scaleMode = 'noScale'; //StageScaleMode.NO_SCALE
+      stage.align = 'TL'; //StageAlign.TOP_LEFT;
       Security.allowDomain("*");
       NetConnection.defaultObjectEncoding = ObjectEncoding.AMF0;
       
+      // Start and stop streaming
+      ExternalInterface.addCallback("startStreaming", startStreaming);
+      ExternalInterface.addCallback("stopStreaming", stopStreaming);
+      ExternalInterface.addCallback("bootstrap", bootstrap);
+    }
+
+    private function bootstrap(width:int, height:int, frameRate:int, keyFrameInterval:int, quality:int, bitrate:int):void {
+      if(bootstrapped) return;
+
       // Set up h264 encoding
       h264Settings = new H264VideoStreamSettings();
-      h264Settings.setProfileLevel( H264Profile.BASELINE, H264Level.LEVEL_3_1);
+      h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3_1);
 
       // Set up the camera
       camera = Camera.getCamera(); 
@@ -42,9 +54,9 @@ package {
         ExternalInterface.call('webcam.debug', "error", "No camera was detected.");
         return;
       }
-      cam.setMode(320, 240, 25, true);
-      cam.setKeyFrameInterval(50);
-      cam.setQuality(2000000, 100);
+      camera.setMode(width, height, frameRate, false);
+      camera.setKeyFrameInterval(keyFrameInterval);
+      camera.setQuality(bitrate, quality);
       camera.addEventListener(StatusEvent.STATUS, function(event:StatusEvent):void {
         switch(event.code) {
         case "Camera.Muted": 
@@ -57,13 +69,16 @@ package {
       });
       
       // Attach a video object for display
-      video = new Video(camera.width, camera.height); 
+      video = new Video(width, height);
+      video.x = 0;
+      video.y = 0;
+      video.width = this.stage.stageWidth;
+      video.height = this.stage.stageHeight;
+      video.smoothing = true;
       video.attachCamera(camera); 
       addChild(video);
-      
-      // Start and stop streaming
-      ExternalInterface.addCallback("startStreaming", startStreaming);
-      ExternalInterface.addCallback("stopStreaming", stopStreaming);
+
+      bootstrapped = true;
     }
 
     private function closeConnections():void {
@@ -78,6 +93,11 @@ package {
     }
 
     public function startStreaming(server:String, stream:String):Boolean {
+      if(!bootstrapped) {
+        ExternalInterface.call('webcam.debug', "error", "startStreaming() called before bootstrap().");
+        return false;
+      }
+
       // Clear previous connections
       closeConnections();
 
@@ -98,6 +118,11 @@ package {
       return true;
     }
     public function stopStreaming():Boolean {
+      if(!bootstrapped) {
+        ExternalInterface.call('webcam.debug', "error", "stopStreaming() called before bootstrap().");
+        return false;
+      }
+
       closeConnections();
       ExternalInterface.call("webcam.onStreamingStop", "");
       return true;
@@ -110,7 +135,7 @@ package {
         ExternalInterface.call('webcam.debug', "notify", 'connected = ' + nc.connected);
         // Connect a stream and publish it
         ns = new NetStream(nc);
-        hs.videoStreamSettings = h264Settings;
+        ns.videoStreamSettings = h264Settings;
         ns.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler, false, 0, true);
         ns.addEventListener(IOErrorEvent.IO_ERROR, errorHandler, false, 0, true);
         ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, errorHandler, false, 0, true);
@@ -118,16 +143,16 @@ package {
         //ns.attachAudio(Microphone.getMicrophone(-1));
 
         // Send some meaningful meta data to the server
-        ns_out.send( "@setDataFrame", "onMetaData", {
-          codec: ns_out.videoStreamSettings.codec,
+        ns.send( "@setDataFrame", "onMetaData", {
+          codec: ns.videoStreamSettings.codec,
           audiocodecid:5,
 	  profile:  h264Settings.profile,
 	  level: h264Settings.level,
-	  fps: cam.fps,
-	  bandwith: cam.bandwidth,
-	  height: cam.height,
-	  width: cam.width,
-	  keyFrameInterval: cam.keyFrameInterval
+	  fps: camera.fps,
+	  bandwith: camera.bandwidth,
+	  height: camera.height,
+	  width: camera.width,
+	  keyFrameInterval: camera.keyFrameInterval
         });
 
         ExternalInterface.call('webcam.debug', "notify", 'publish stream = ' + this.stream);

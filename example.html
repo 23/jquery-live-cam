@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <style type="text/css">
+      body {margin:0; overflow:hidden;}
+      #webcam {position:absolute; width:100%; height:100%; background-color:#B2B2B2;}
+      #webcam object, #webcam embed {width:100%; height:100%;}
+      #buttons {position:absolute; bottom:20px; text-align:center; width:100%;}
+      #buttons button {display:none;}
+    </style>
+  </head>
+  <body>
+    <div id="webcam"></div>
+    <div id="buttons">
+      <button id="start" onclick="webcam.startStreaming('<rtmp url>', '<rtmp stream name>')">&#9658;</button>
+      <button id="stop" onclick="webcam.stopStreaming();">&#9632;</button>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="jquery.livecam.js"></script>
+    <script>
+      (function($){
+        jQuery("#webcam").webcam({
+          canvasWidth: 640,
+          canvasHeight: 360,
+          quality: 100,
+          frameRate: 25,
+          keyFrameInterval: 50,
+          bitrate: 1000000,
+          width: 1280,
+          height: 720,
+
+          bgcolor: '#B2B2B2',
+          swffile: "./jslivecam.swf", // canvas only doesn't implement a jpeg encoder, so the file is much smaller
+          
+          debug: function (type, string) {
+            console.log(type, string);
+          },
+          onLoad: function () {
+            $('#start').show();
+            $('#stop').hide();
+          },
+          onStreamingStart: function () {
+            $('#start').hide();
+            $('#stop').show();
+          },
+          onStreamingStop: function () {
+            $('#start').show();
+            $('#stop').hide();
+          }
+        });
+      })(jQuery);
+    </script>
+  </body>
+</html>
+
