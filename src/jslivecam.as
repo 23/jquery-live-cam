@@ -21,6 +21,7 @@ package {
   
   public class jslivecam extends Sprite {
     private var camera:Camera = null;
+    private var microphone:Microphone = null;
     private var video:Video = null;
     private var nc:NetConnection;
     private var ns:NetStream;
@@ -67,6 +68,27 @@ package {
           break; 
         } 
       });
+
+      // Set up microphone
+      microphone = Microphone.getMicrophone();
+      if(microphone==null) {
+        ExternalInterface.call('webcam.debug', "error", "No mic was detected.");
+        return;
+      }
+      microphone.rate = 16;
+      microphone.codec = SoundCodec.SPEEX;
+      microphone.setSilenceLevel(0, -1);
+      microphone.setUseEchoSuppression(true);
+      microphone.addEventListener(StatusEvent.STATUS, function(event:StatusEvent):void {
+        switch(event.code) {
+        case "Microphone.Muted": 
+          ExternalInterface.call('webcam.debug', "error", "The microphone was disabled.");
+          break; 
+        case "Microphone.Unmuted": 
+	  ExternalInterface.call('webcam.debug', "notify", "Microphone started");
+          break; 
+        } 
+      });
       
       // Attach a video object for display
       video = new Video(width, height);
@@ -75,7 +97,7 @@ package {
       video.width = this.stage.stageWidth;
       video.height = this.stage.stageHeight;
       video.smoothing = true;
-      video.attachCamera(camera); 
+      video.attachCamera(camera);
       addChild(video);
 
       bootstrapped = true;
@@ -139,13 +161,13 @@ package {
         ns.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler, false, 0, true);
         ns.addEventListener(IOErrorEvent.IO_ERROR, errorHandler, false, 0, true);
         ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, errorHandler, false, 0, true);
-        ns.attachCamera(Camera.getCamera());
-        //ns.attachAudio(Microphone.getMicrophone(-1));
+        ns.attachCamera(camera);
+        ns.attachAudio(microphone);
 
         // Send some meaningful meta data to the server
         ns.send( "@setDataFrame", "onMetaData", {
           codec: ns.videoStreamSettings.codec,
-          audiocodecid:5,
+          audiocodecid:11,
 	  profile:  h264Settings.profile,
 	  level: h264Settings.level,
 	  fps: camera.fps,
